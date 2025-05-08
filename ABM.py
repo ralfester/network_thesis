@@ -2,8 +2,18 @@ import mesa
 import numpy as np
 import random
 import math
-from enum import Enum, auto
+
+from crimes import CRIMES
+from enums import CriminalStatus
 from math import exp, sqrt
+
+from economics import (
+    generate_initial_wealth,
+    generate_wages_option_a,
+    generate_wages_option_b,
+    biased_wealth_transfer,
+    crime_propensity
+)
 
 # Cultural module import
 from Culture_language_mechanism import (
@@ -12,13 +22,37 @@ from Culture_language_mechanism import (
     cultural_favorability,
 )
 
+from law_enforcement import probability_of_being_caught, incarcerate, step_incarceration
 
-# CRIMINAL STATUS ENUM
-class CriminalStatus(Enum):
-    NON_CRIMINAL = auto()
-    PETTY_CRIMINAL = auto()
-    ORGANIZED_CRIMINAL = auto()
-    VORY = auto()
+from crime_decision import (
+    wealth_class_bias,
+    fraud_access_score,
+    filter_eligible_crimes,
+    normalize_and_sample,
+)
+
+def setup_economy(num_agents, mode="A", r_w=0.05):
+    """
+    Initializes wealth and wages for all agents.
+
+    Parameters:
+        num_agents (int): number of agents
+        mode (str): "A" for truncated Pareto wages, "B" for wealth-proportional wages
+        r_w (float): wage-to-wealth ratio for Option B
+
+    Returns:
+        Tuple of (initial_wealths, wages)
+    """
+    initial_wealth = generate_initial_wealth(num_agents)
+
+    if mode == "A":
+        wages = generate_wages_option_a(num_agents)
+    elif mode == "B":
+        wages = generate_wages_option_b(initial_wealth, r_w)
+    else:
+        raise ValueError("Invalid wage mode: choose 'A' or 'B'")
+
+    return initial_wealth, wages
 
 
 class PersonAgent(mesa.Agent):
@@ -144,3 +178,52 @@ class PersonAgent(mesa.Agent):
 
     def is_associated_with(self, other):
         return other.unique_id in self.associates
+
+    def decide_which_crime(self):
+        """
+        Decide which crime to commit based on wealth, affiliation, traits, and eligibility filters.
+        Returns a string crime name or None.
+        """
+        candidate_weights = {}
+
+        # --- Step 1: Wealth bias toward petty crimes ---
+        petty_bias = wealth_class_bias(self.wealth)
+        candidate_weights["theft"] = petty_bias
+        candidate_weights["assault"] = petty_bias * 0.5  # less likely
+
+        # --- Step 2: Affiliation and access to organized crime ---
+        if self.criminal_status in {CriminalStatus.ORGANIZED_CRIMINAL, CriminalStatus.VORY}:
+            fraud_score = fraud_access_score(
+                self.wealth, w_f=500, lambda_=0.01, centrality=len(self.associates) + 1
+            )
+            candidate_weights["racketeering"] = fraud_score
+
+        # --- Step 3: Trait filters ---
+        eligible_crimes = filter_eligible_crimes(self, candidate_weights)
+
+        if not eligible_crimes:
+            return None
+
+        # --- Step 4: Normalize & sample ---
+        return normalize_and_sample(eligible_crimes)
+
+    def attempt_crime(self, s_k, r_k, crime_name="unknown"):
+        """
+        Attempt a crime and possibly get incarcerated.
+
+        Parameters:
+            s_k: minimum sentence (in timesteps)
+            r_k: reporting rate (visibility)
+            crime_name: optional label
+        """
+        if hasattr(self, "wealth"):
+            p_caught = probability_of_being_caught(self.wealth, s_k, r_k)
+            if np.random.random() < p_caught:
+                incarcerate(self, s_k)
+                print(
+                    f"Agent {self.unique_id} caught committing {crime_name} (p={p_caught:.2f})"
+                )
+            else:
+                print(
+                    f"Agent {self.unique_id} got away with {crime_name} (p={p_caught:.2f})"
+                )
