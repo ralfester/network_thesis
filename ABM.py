@@ -9,13 +9,16 @@ from math import exp, sqrt
 
 from victim_selection import choose_victim
 from racketeering import apply_racketeering
+from criminal_progression import update_status
+
+from crime_rewards import robbery_gain, fraud_gain, racketeering_gain
 
 from economics import (
     generate_initial_wealth,
     generate_wages_option_a,
     generate_wages_option_b,
     biased_wealth_transfer,
-    crime_propensity
+    crime_propensity,
 )
 
 # Cultural module import
@@ -33,6 +36,7 @@ from crime_decision import (
     filter_eligible_crimes,
     normalize_and_sample,
 )
+
 
 def setup_economy(num_agents, mode="A", r_w=0.05):
     """
@@ -195,7 +199,10 @@ class PersonAgent(mesa.Agent):
         candidate_weights["assault"] = petty_bias * 0.5  # less likely
 
         # --- Step 2: Affiliation and access to organized crime ---
-        if self.criminal_status in {CriminalStatus.ORGANIZED_CRIMINAL, CriminalStatus.VORY}:
+        if self.criminal_status in {
+            CriminalStatus.ORGANIZED_CRIMINAL,
+            CriminalStatus.VORY,
+        }:
             fraud_score = fraud_access_score(
                 self.wealth, w_f=500, lambda_=0.01, centrality=len(self.associates) + 1
             )
@@ -210,23 +217,46 @@ class PersonAgent(mesa.Agent):
         # --- Step 4: Normalize & sample ---
         return normalize_and_sample(eligible_crimes)
 
-    def attempt_crime(self, s_k, r_k, crime_name="unknown"):
+    def attempt_crime(self, s_k, r_k, crime_name="unknown", victim=None):
         """
-        Attempt a crime and possibly get incarcerated.
+        Attempt a crime and possibly get incarcerated. Apply gain if successful.
 
         Parameters:
             s_k: minimum sentence (in timesteps)
             r_k: reporting rate (visibility)
             crime_name: optional label
+            victim: optional victim agent (required for some crimes)
         """
-        if hasattr(self, "wealth"):
-            p_caught = probability_of_being_caught(self.wealth, s_k, r_k)
-            if np.random.random() < p_caught:
-                incarcerate(self, s_k)
-                print(
-                    f"Agent {self.unique_id} caught committing {crime_name} (p={p_caught:.2f})"
-                )
-            else:
-                print(
-                    f"Agent {self.unique_id} got away with {crime_name} (p={p_caught:.2f})"
-                )
+        if not hasattr(self, "wealth"):
+            return
+
+        p_caught = probability_of_being_caught(self.wealth, s_k, r_k)
+        caught = np.random.random() < p_caught
+
+        if caught:
+            incarcerate(self, s_k)
+            print(
+                f"Agent {self.unique_id} caught committing {crime_name} (p={p_caught:.2f})"
+            )
+        else:
+            print(
+                f"Agent {self.unique_id} got away with {crime_name} (p={p_caught:.2f})"
+            )
+
+            # Economic Gain
+            gain = 0
+            if crime_name in {"theft", "assault", "robbery"} and victim:
+                gain, murder_flag = robbery_gain(victim.wealth)
+                if murder_flag:
+                    print(f"Agent {self.unique_id} escalated to murder!")
+                    gain = 0  # No gain if murder
+            elif crime_name == "fraud" and victim:
+                gain = fraud_gain(victim.wealth)
+            elif crime_name == "racketeering":
+                num_victims = getattr(self, "num_racket_victims", 0)
+                gain = racketeering_gain(num_victims)
+
+            self.wealth += gain
+
+        # Always update status, even on failure
+        update_status(self, s_k, w_k=1.3 if crime_name == "assault" else 1.0)
