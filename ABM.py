@@ -7,6 +7,9 @@ from crimes import CRIMES
 from enums import CriminalStatus
 from math import exp, sqrt
 
+from victim_selection import choose_victim
+from racketeering import apply_racketeering
+
 from economics import (
     generate_initial_wealth,
     generate_wages_option_a,
