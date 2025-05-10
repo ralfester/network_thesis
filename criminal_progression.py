@@ -1,17 +1,17 @@
 from enums import CriminalStatus
 
-S_MAX = 6  # Maximum min sentence (for normalization)
+S_MAX = 6  # Maximum min sentence, max gain and normalizer
 
 
 def update_status(agent, s_k, w_k):
     """
     Increment criminal score and update criminal status.
     """
-    # Initialize if missing
+    # Initialize a criminal score if missing
     if not hasattr(agent, "criminal_score"):
         agent.criminal_score = 0
 
-    # Score increment
+    # Score increment logic
     agent.criminal_score += w_k * (s_k / S_MAX) * 100
 
     score = agent.criminal_score
@@ -21,9 +21,9 @@ def update_status(agent, s_k, w_k):
         for aid in agent.associates
     )
 
-    # Update status
+    # Updates criminal status
     if score >= 300 and degree >= 6:
-        # Check centrality (placeholder: use degree for now)
+        # Need a check for centrality (placeholder: use degree for now)
         centrality = degree
         max_centrality = max(len(a.associates) for a in agent.model.schedule.agents)
         if centrality == max_centrality:

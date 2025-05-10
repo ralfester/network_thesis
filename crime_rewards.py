@@ -3,7 +3,7 @@ import numpy as np
 
 def robbery_gain(victim_wealth, alpha=0.1, murder_chance=0.00022):
     """
-    Returns monetary gain and a flag indicating if murder occurred.
+    Returns monetary gain and a note indicating if murder occurred.
     """
     if np.random.random() < murder_chance:
         return 0, True

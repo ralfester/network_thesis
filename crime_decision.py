@@ -17,11 +17,11 @@ def filter_eligible_crimes(agent, candidate_crimes, max_distance=3.0):
     eligible = {}
 
     for crime in candidate_crimes:
-        if crime == "robbery" and agent.muscle_mass < 30:  # τ_force
+        if crime == "robbery" and agent.muscle_mass < 30:  # tau_force
             continue
-        if crime == "bribery" and agent.charisma < 0.7:  # τ_charisma
+        if crime == "bribery" and agent.charisma < 0.7:  # tau_charisma
             continue
-        # Additional gates could be added here (e.g., distance, affiliation)
+        # Additional gates should be added here (e.g., distance, affiliation)
         eligible[crime] = candidate_crimes[crime]
 
     return eligible

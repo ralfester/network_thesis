@@ -1,4 +1,5 @@
-RACKET_TRIBUTE = 50
+RACKET_TRIBUTE = 30
+
 
 def apply_racketeering(racketeer, victim):
     """
@@ -15,12 +16,12 @@ def apply_racketeering(racketeer, victim):
         victim.racket_defaults += 1
 
         if victim.racket_defaults == 1:
-            # escalate to robbery
+            # escalate to robbery if no payment is made
             loot = min(0.2 * victim.wealth, racketeer.wealth)
             victim.wealth -= loot
             racketeer.wealth += loot
             return f"Robbery! {racketeer.unique_id} looted {loot:.2f} from {victim.unique_id}"
         elif victim.racket_defaults >= 2:
-            # escalate to murder
+            # escalate to murder if money isn't gained
             victim.alive = False
             return f"Murder! {racketeer.unique_id} eliminated {victim.unique_id}"

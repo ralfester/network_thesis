@@ -188,17 +188,17 @@ class PersonAgent(mesa.Agent):
 
     def decide_which_crime(self):
         """
-        Decide which crime to commit based on wealth, affiliation, traits, and eligibility filters.
-        Returns a string crime name or None.
+        Decide which crime to commit based on wealth, affiliation, traits,
+        and eligibility filters. Returns a string crime name or None.
         """
         candidate_weights = {}
 
-        # --- Step 1: Wealth bias toward petty crimes ---
+        # Step 1: Wealth bias toward petty crimes
         petty_bias = wealth_class_bias(self.wealth)
         candidate_weights["theft"] = petty_bias
         candidate_weights["assault"] = petty_bias * 0.5  # less likely
 
-        # --- Step 2: Affiliation and access to organized crime ---
+        # Step 2: Affiliation and access to organized crime
         if self.criminal_status in {
             CriminalStatus.ORGANIZED_CRIMINAL,
             CriminalStatus.VORY,
@@ -208,13 +208,13 @@ class PersonAgent(mesa.Agent):
             )
             candidate_weights["racketeering"] = fraud_score
 
-        # --- Step 3: Trait filters ---
+        # Step 3: Trait filters
         eligible_crimes = filter_eligible_crimes(self, candidate_weights)
 
         if not eligible_crimes:
             return None
 
-        # --- Step 4: Normalize & sample ---
+        # Step 4: Normalize & sample
         return normalize_and_sample(eligible_crimes)
 
     def attempt_crime(self, s_k, r_k, crime_name="unknown", victim=None):
@@ -260,3 +260,27 @@ class PersonAgent(mesa.Agent):
 
         # Always update status, even on failure
         update_status(self, s_k, w_k=1.3 if crime_name == "assault" else 1.0)
+
+    def step_criminal_activity(self, all_agents):
+        # Check if agent is even likely to commit crime
+        p_crime = crime_propensity(self.wealth)
+        if np.random.random() > p_crime:
+            return  # No crime this round
+
+        # Choose what crime to commit
+        crime = self.decide_which_crime()
+        if not crime:
+            return
+
+        # Find a victim
+        victim = choose_victim(self, all_agents, crime_type=crime)
+        if not victim:
+            return
+
+        # Get crime parameters
+        params = CRIMES[crime]
+        s_k = params["min_sentence"]
+        r_k = params["report_rate"]
+
+        # Attempt the crime
+        self.attempt_crime(s_k=s_k, r_k=r_k, crime_name=crime, victim=victim)

@@ -10,25 +10,40 @@ def distance_decay(distance, tau=30):
     return np.exp(-k * distance)
 
 
-def victim_selection_prob(agent_i, agent_j, tau=30):
+def victim_selection_prob(agent_i, agent_j, tau=30, crime_type="generic"):
     if agent_j.incarcerated or agent_j.desisted or getattr(agent_j, "immune", False):
-        return 0  # not eligible
+        return 0
 
     d = agent_i.physical_distance(agent_j)
     w = agent_j.wealth
     intimidation = intimidation_factor(agent_i.muscle_mass, agent_j.muscle_mass)
 
-    return distance_decay(d, tau) * np.log1p(w) * intimidation
+    if crime_type == "fraud":
+        # Charisma and wealth matter, physical traits less so
+        return distance_decay(d, tau) * (np.log1p(w) + agent_i.charisma)
+
+    elif crime_type == "robbery":
+        # Muscle and wealth are key
+        return distance_decay(d, tau) * np.log1p(w) * intimidation
+
+    elif crime_type == "racketeering":
+        return distance_decay(d, tau) * np.log1p(w) * intimidation
+
+    elif crime_type == "theft":
+        # Avoid strength penalty, focus on wealth and proximity
+        return distance_decay(d, tau) * np.log1p(w) / intimidation
+
+    return distance_decay(d, tau) * np.log1p(w)  # fallback
 
 
-def choose_victim(agent_i, population, tau=30):
+def choose_victim(agent_i, population, tau=30, crime_type="generic"):
     scores = []
     candidates = []
 
     for agent_j in population:
         if agent_j.unique_id == agent_i.unique_id:
             continue
-        p = victim_selection_prob(agent_i, agent_j, tau)
+        p = victim_selection_prob(agent_i, agent_j, tau, crime_type)
         if p > 0:
             scores.append(p)
             candidates.append(agent_j)

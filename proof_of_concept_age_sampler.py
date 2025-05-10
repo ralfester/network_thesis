@@ -26,7 +26,8 @@ group_probs = group_weights / group_weights.sum()
 
 def sample_ages(n_samples):
 
-    chosen_indices = np.random.choice(len(age_groups), size=n_samples, p=group_probs)
+    chosen_indices = np.random.choice(len(age_groups),
+                                      size=n_samples, p=group_probs)
 
     sampled_ages = np.array(
         [np.random.randint(group_starts[i], group_ends[i] + 1) for i in chosen_indices]
