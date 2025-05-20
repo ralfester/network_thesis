@@ -9,3 +9,7 @@ gender_distributions.pdf
 Russian Federation-1989.csv
 testrun.py
 testrun_pdf_of_ages.py
+crimestats.csv
+crimestats.py
+crime_rates.pdf
+Log-Normal_PDF_CDF_plotter.py
