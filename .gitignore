@@ -21,3 +21,7 @@ __pycache__/law_enforcement.cpython-312.pyc
 __pycache__/racketeering.cpython-312.pyc
 __pycache__/victim_selection.cpython-312.pyc
 __pycache__/data_export.cpython-312.pyc
+crime_rates.pdf
+crimestats.csv
+crimestats.py
+Log-Normal_PDF_CDF_plotter.py
