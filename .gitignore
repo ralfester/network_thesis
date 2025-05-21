@@ -21,3 +21,14 @@ __pycache__/law_enforcement.cpython-312.pyc
 __pycache__/racketeering.cpython-312.pyc
 __pycache__/victim_selection.cpython-312.pyc
 __pycache__/data_export.cpython-312.pyc
+__pycache__/model.cpython-312.pyc
+plots/age.pdf
+plots/criminal_status.pdf
+plots/gender.pdf
+plots/muscle_mass.pdf
+plots/top_nationalities.pdf
+plots/wage.pdf
+plots/wealth.pdf
+plots/weight.pdf
+initial_agents.csv
+initial_distributions.png

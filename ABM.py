@@ -21,7 +21,6 @@ from economics import (
     crime_propensity,
 )
 
-# Cultural module import
 from Culture_language_mechanism import (
     pick_nationality,
     get_languages,
@@ -38,38 +37,39 @@ from crime_decision import (
 )
 
 
+# --- Sampling Functions ---
+
+
+def sample_gender():
+    return np.random.choice(["F", "M"], p=[0.54, 0.46])
+
+
+# --- Economy Setup ---
+
+
 def setup_economy(num_agents, mode="A", r_w=0.05):
-    """
-    Initializes wealth and wages for all agents.
-
-    Parameters:
-        num_agents (int): number of agents
-        mode (str): "A" for truncated Pareto wages, "B" for wealth-proportional wages
-        r_w (float): wage-to-wealth ratio for Option B
-
-    Returns:
-        Tuple of (initial_wealths, wages)
-    """
     initial_wealth = generate_initial_wealth(num_agents)
-
     if mode == "A":
         wages = generate_wages_option_a(num_agents)
     elif mode == "B":
         wages = generate_wages_option_b(initial_wealth, r_w)
     else:
         raise ValueError("Invalid wage mode: choose 'A' or 'B'")
-
     return initial_wealth, wages
 
 
-class PersonAgent(mesa.Agent):
+# --- Agent Definition ---
+
+
+class PersonAgent:
     def __init__(self, unique_id, model):
-        super().__init__(unique_id, model)
+        self.unique_id = unique_id
+        self.model = model
 
         # Demographics
-        self.gender = self.random.choices(["F", "M"], weights=[0.54, 0.46])[0]
+        self.gender = sample_gender()
         self.age = self.sample_age()
-        self.height = self.random.gauss(mu=170, sigma=10)
+        self.height = random.gauss(mu=170, sigma=10)
         self.weight = self.sample_weight_log_normal(self.gender)
 
         # Muscle mass
@@ -77,20 +77,20 @@ class PersonAgent(mesa.Agent):
         self.muscle_mass = self.compute_muscle_mass(self.age, self.muscle_mass_initial)
 
         # Social traits
-        self.charisma = self.random.uniform(0, 1)
+        self.charisma = random.uniform(0, 1)
 
         # Location
         self.location = self.assign_location()
 
-        # Nationality & Language
+        # Cultural identity
         self.nationality = pick_nationality()
         self.language_primary, self.language_secondary = get_languages(self.nationality)
 
-        # Criminal status update
+        # Criminal network
         self.criminal_status = CriminalStatus.NON_CRIMINAL
         self.associates = set()
 
-    # Sampling methods
+    # --- Sampling Methods ---
 
     def sample_age(self):
         age_bins = [
@@ -123,15 +123,15 @@ class PersonAgent(mesa.Agent):
         elif age < 50:
             return initial_mass * math.exp(-0.01 * (age - 30))
         else:
-            intermediate_mass = initial_mass * math.exp(-0.01 * 20)
-            return intermediate_mass * math.exp(-0.015 * (age - 50))
+            intermediate = initial_mass * math.exp(-0.01 * 20)
+            return intermediate * math.exp(-0.015 * (age - 50))
 
     def assign_location(self):
-        angle = self.random.uniform(0, 2 * np.pi)
-        radius = np.sqrt(self.random.uniform(0, 1)) * 3
+        angle = random.uniform(0, 2 * np.pi)
+        radius = np.sqrt(random.uniform(0, 1)) * 3
         return (radius * np.cos(angle), radius * np.sin(angle))
 
-    # Language and Cultural Interactions
+    # --- Cultural + Social ---
 
     def speaks(self, lang):
         return lang == self.language_primary or lang == self.language_secondary
@@ -146,6 +146,8 @@ class PersonAgent(mesa.Agent):
             CriminalStatus.ORGANIZED_CRIMINAL: 2,
             CriminalStatus.VORY: 3,
         }.get(self.criminal_status, 0)
+
+    # --- Distance + Association ---
 
     def trait_vector(self):
         return np.array([self.charisma, self.muscle_mass, self.height, self.weight])
@@ -177,8 +179,7 @@ class PersonAgent(mesa.Agent):
             + weights["w4"] * abs(self.age - other.age)
             + weights["w5"] * self.trait_distance(other)
         )
-        p = 1 / (1 + exp(-z))
-        return p >= threshold
+        return 1 / (1 + exp(-z)) >= threshold
 
     def add_associate(self, other):
         self.associates.add(other.unique_id)
@@ -186,19 +187,15 @@ class PersonAgent(mesa.Agent):
     def is_associated_with(self, other):
         return other.unique_id in self.associates
 
+    # --- Crime Logic ---
+
     def decide_which_crime(self):
-        """
-        Decide which crime to commit based on wealth, affiliation, traits,
-        and eligibility filters. Returns a string crime name or None.
-        """
         candidate_weights = {}
 
-        # Step 1: Wealth bias toward petty crimes
         petty_bias = wealth_class_bias(self.wealth)
         candidate_weights["theft"] = petty_bias
-        candidate_weights["assault"] = petty_bias * 0.5  # less likely
+        candidate_weights["assault"] = petty_bias * 0.5
 
-        # Step 2: Affiliation and access to organized crime
         if self.criminal_status in {
             CriminalStatus.ORGANIZED_CRIMINAL,
             CriminalStatus.VORY,
@@ -208,25 +205,10 @@ class PersonAgent(mesa.Agent):
             )
             candidate_weights["racketeering"] = fraud_score
 
-        # Step 3: Trait filters
         eligible_crimes = filter_eligible_crimes(self, candidate_weights)
-
-        if not eligible_crimes:
-            return None
-
-        # Step 4: Normalize & sample
-        return normalize_and_sample(eligible_crimes)
+        return normalize_and_sample(eligible_crimes) if eligible_crimes else None
 
     def attempt_crime(self, s_k, r_k, crime_name="unknown", victim=None):
-        """
-        Attempt a crime and possibly get incarcerated. Apply gain if successful.
-
-        Parameters:
-            s_k: minimum sentence (in timesteps)
-            r_k: reporting rate (visibility)
-            crime_name: optional label
-            victim: optional victim agent (required for some crimes)
-        """
         if not hasattr(self, "wealth"):
             return
 
@@ -243,13 +225,12 @@ class PersonAgent(mesa.Agent):
                 f"Agent {self.unique_id} got away with {crime_name} (p={p_caught:.2f})"
             )
 
-            # Economic Gain
             gain = 0
             if crime_name in {"theft", "assault", "robbery"} and victim:
                 gain, murder_flag = robbery_gain(victim.wealth)
                 if murder_flag:
                     print(f"Agent {self.unique_id} escalated to murder!")
-                    gain = 0  # No gain if murder
+                    gain = 0
             elif crime_name == "fraud" and victim:
                 gain = fraud_gain(victim.wealth)
             elif crime_name == "racketeering":
@@ -258,29 +239,24 @@ class PersonAgent(mesa.Agent):
 
             self.wealth += gain
 
-        # Always update status, even on failure
         update_status(self, s_k, w_k=1.3 if crime_name == "assault" else 1.0)
 
     def step_criminal_activity(self, all_agents):
-        # Check if agent is even likely to commit crime
-        p_crime = crime_propensity(self.wealth)
-        if np.random.random() > p_crime:
-            return  # No crime this round
+        if np.random.random() > crime_propensity(self.wealth):
+            return
 
-        # Choose what crime to commit
         crime = self.decide_which_crime()
         if not crime:
             return
 
-        # Find a victim
         victim = choose_victim(self, all_agents, crime_type=crime)
         if not victim:
             return
 
-        # Get crime parameters
         params = CRIMES[crime]
-        s_k = params["min_sentence"]
-        r_k = params["report_rate"]
-
-        # Attempt the crime
-        self.attempt_crime(s_k=s_k, r_k=r_k, crime_name=crime, victim=victim)
+        self.attempt_crime(
+            s_k=params["min_sentence"],
+            r_k=params["report_rate"],
+            crime_name=crime,
+            victim=victim,
+        )
