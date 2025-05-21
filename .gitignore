@@ -9,15 +9,3 @@ gender_distributions.pdf
 Russian Federation-1989.csv
 testrun.py
 testrun_pdf_of_ages.py
-__pycache__/ABM.cpython-312.pyc
-__pycache__/crime_decision.cpython-312.pyc
-__pycache__/crime_rewards.cpython-312.pyc
-__pycache__/crimes.cpython-312.pyc
-__pycache__/criminal_progression.cpython-312.pyc
-__pycache__/Culture_language_mechanism.cpython-312.pyc
-__pycache__/data_export.cpython-312.pyc
-__pycache__/economics.cpython-312.pyc
-__pycache__/enums.cpython-312.pyc
-__pycache__/law_enforcement.cpython-312.pyc
-__pycache__/racketeering.cpython-312.pyc
-__pycache__/victim_selection.cpython-312.pyc
