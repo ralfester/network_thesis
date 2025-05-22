@@ -7,22 +7,15 @@ def sigmoid(x):
 
 
 def probability_of_being_caught(
-    wealth,
-    severity,
-    report_rate,
-    s_max=6,
-    alpha=0.5,
-    lambda_=1.5,
-    mu=0.1,
-    theta=4.0
+    wealth, severity, report_rate, s_max=6, alpha=0.5, lambda_=1.5, mu=0.005, theta=4.0
 ):
-    """Returns probability of being caught after a crime"""
-    bribe_component = 1 - sigmoid(mu * wealth - theta)
+    bribe_component = 1 - sigmoid(mu * np.log1p(wealth) - theta)
     severity_component = (np.exp(lambda_ * severity) - 1) / (
         np.exp(lambda_ * s_max) - 1
     )
     weighted_visibility = alpha * severity_component + (1 - alpha) * report_rate
-    return bribe_component * weighted_visibility
+    p = bribe_component * weighted_visibility
+    return max(p, 0.01)  # ensure floor chance of 1%
 
 
 def incarcerate(agent, sentence_length):

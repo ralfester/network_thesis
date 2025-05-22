@@ -60,6 +60,12 @@ class CrimeSocietyModel(mesa.Model):
         for agent in agents:
             step_incarceration(agent)
 
+        # aging update
+
+        if self.current_step % 12 == 0:
+            for agent in self.agent_list:
+                agent.age += 1
+
         self.log_statistics()
 
     def log_statistics(self):

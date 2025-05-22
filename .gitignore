@@ -32,3 +32,12 @@ plots/wealth.pdf
 plots/weight.pdf
 initial_agents.csv
 initial_distributions.png
+__pycache__/visuals.cpython-312.pyc
+plots/age_hist.pdf
+plots/criminal_status_count.pdf
+plots/gender_count.pdf
+plots/muscle_mass_hist.pdf
+plots/wage_hist.pdf
+plots/wealth_hist.pdf
+plots/weight_hist.pdf
+final_agents.csv

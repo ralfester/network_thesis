@@ -216,7 +216,9 @@ class PersonAgent:
         caught = np.random.random() < p_caught
 
         if caught:
-            incarcerate(self, s_k)
+            sentence_years = s_k + np.random.randint(0, 3)
+            sentence_months = sentence_years * 12
+            incarcerate(self, sentence_months)
             print(
                 f"Agent {self.unique_id} caught committing {crime_name} (p={p_caught:.2f})"
             )

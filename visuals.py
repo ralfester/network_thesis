@@ -1,15 +1,6 @@
 import os
 import matplotlib.pyplot as plt
 import seaborn as sns
-from model import CrimeSocietyModel
-
-# --- Run simulation to get initialized agent data ---
-model = CrimeSocietyModel(num_agents=1000)
-initial_df = model.agent_dataframe.copy()
-
-# --- Export to CSV ---
-initial_df.to_csv("initial_agents.csv", index=False)
-print("Initial agent data exported to 'initial_agents.csv'.")
 
 # --- Create plots directory ---
 PLOT_DIR = "plots"
@@ -19,42 +10,44 @@ os.makedirs(PLOT_DIR, exist_ok=True)
 sns.set_theme(style="darkgrid")
 
 
-# --- Plot functions ---
 def save_plot(fig, name):
     path = os.path.join(PLOT_DIR, f"{name}.pdf")
     fig.savefig(path)
     plt.close(fig)
 
 
-def plot_hist(column, title, bins=30):
+def plot_hist(df, column, title, bins=30):
     fig, ax = plt.subplots(figsize=(7, 5))
-    sns.histplot(initial_df[column], kde=True, bins=bins, ax=ax)
+    sns.histplot(df[column], kde=True, bins=bins, ax=ax)
     ax.set_title(title)
-    save_plot(fig, column)
+    save_plot(fig, f"{column}_hist")
 
 
-def plot_count(column, title):
+def plot_count(df, column, title):
     fig, ax = plt.subplots(figsize=(7, 5))
-    sns.countplot(data=initial_df, x=column, ax=ax)
+    sns.countplot(data=df, x=column, ax=ax)
     ax.set_title(title)
-    save_plot(fig, column)
+    save_plot(fig, f"{column}_count")
 
 
-# --- Generate and save plots ---
-plot_hist("age", "Age Distribution", bins=10)
-plot_count("gender", "Gender Distribution")
-plot_hist("weight", "Weight Distribution")
-plot_hist("muscle_mass", "Muscle Mass Distribution")
-plot_hist("wealth", "Initial Wealth Distribution")
-plot_hist("wage", "Initial Wage Distribution")
-plot_count("criminal_status", "Criminal Status Distribution")
+def plot_top_nationalities(df, top_n=10):
+    fig, ax = plt.subplots(figsize=(10, 6))
+    top_nations = df["nationality"].value_counts().nlargest(top_n)
+    sns.barplot(x=top_nations.index, y=top_nations.values, ax=ax)
+    ax.set_title(f"Top {top_n} Nationalities")
+    ax.tick_params(axis="x", rotation=45)
+    save_plot(fig, "top_nationalities")
 
-# --- Top Nationalities ---
-fig, ax = plt.subplots(figsize=(10, 6))
-top_nations = initial_df["nationality"].value_counts().nlargest(10)
-sns.barplot(x=top_nations.index, y=top_nations.values, ax=ax)
-ax.set_title("Top 10 Nationalities")
-ax.tick_params(axis="x", rotation=45)
-save_plot(fig, "top_nationalities")
 
-print(f"All plots saved to ./{PLOT_DIR}/")
+def generate_all_plots(df, label="snapshot"):
+    plot_hist(df, "age", f"Age Distribution ({label})", bins=10)
+    plot_count(df, "gender", f"Gender Distribution ({label})")
+    plot_hist(df, "weight", f"Weight Distribution ({label})")
+    plot_hist(df, "muscle_mass", f"Muscle Mass Distribution ({label})")
+    plot_hist(df, "wealth", f"Wealth Distribution ({label})")
+    plot_hist(df, "wage", f"Wage Distribution ({label})")
+    plot_count(df, "criminal_status", f"Criminal Status Distribution ({label})")
+    plot_top_nationalities(df)
+
+
+print("visuals.py loaded. Use `generate_all_plots(df)` to create plots.")
