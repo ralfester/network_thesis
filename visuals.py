@@ -1,4 +1,6 @@
 import os
+import networkx as nx
+
 import matplotlib.pyplot as plt
 import seaborn as sns
 
@@ -48,6 +50,51 @@ def generate_all_plots(df, label="snapshot"):
     plot_hist(df, "wage", f"Wage Distribution ({label})")
     plot_count(df, "criminal_status", f"Criminal Status Distribution ({label})")
     plot_top_nationalities(df)
+
+
+def plot_criminal_network(agent_list, label="Criminal Network"):
+    G = nx.Graph()
+
+    # Add nodes with attributes
+    for agent in agent_list:
+        G.add_node(
+            agent.unique_id,
+            status=agent.criminal_status.name,
+            wealth=agent.wealth,
+            degree=len(agent.associates),
+        )
+
+    # Add edges from associations
+    for agent in agent_list:
+        for associate_id in agent.associates:
+            if G.has_node(associate_id):
+                G.add_edge(agent.unique_id, associate_id)
+
+    # Create position layout
+    pos = nx.spring_layout(G, seed=42)
+
+    # Node color by criminal status
+    status_colors = {
+        "NON_CRIMINAL": "lightgray",
+        "PETTY_CRIMINAL": "orange",
+        "ORGANIZED_CRIMINAL": "red",
+        "VORY": "purple",
+    }
+    node_colors = [status_colors[G.nodes[n]["status"]] for n in G.nodes]
+
+    # Node size by degree
+    node_sizes = [50 + 10 * G.nodes[n]["degree"] for n in G.nodes]
+
+    # Plot
+    fig, ax = plt.subplots(figsize=(12, 9))
+    nx.draw_networkx_nodes(
+        G, pos, node_size=node_sizes, node_color=node_colors, alpha=0.8
+    )
+    nx.draw_networkx_edges(G, pos, alpha=0.3)
+    ax.set_title(label)
+    ax.axis("off")
+
+    save_plot(fig, "criminal_network")
 
 
 print("visuals.py loaded. Use `generate_all_plots(df)` to create plots.")

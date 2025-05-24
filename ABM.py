@@ -160,16 +160,23 @@ class PersonAgent:
         dy = self.location[1] - other.location[1]
         return sqrt(dx * dx + dy * dy)
 
-    def association_probability(self, other, weights=None, threshold=0.5):
+    def association_probability(self, other, weights=None, threshold=0.15):
         if weights is None:
             weights = {
-                "w0": -2.0,
-                "w1": -1.0,
-                "w2": -0.5,
-                "w3": -1.0,
-                "w4": -0.1,
-                "w5": -1.0,
+                "w0": 1.0,  # base bias → lifted from negative
+                "w1": -0.3,  # cultural difference (softer)
+                "w2": -0.2,  # physical distance (softened)
+                "w3": -0.3,  # status difference
+                "w4": -0.02,  # age difference
+                "w5": -0.3,  # trait distance
             }
+
+        # Strong bonus for criminal-to-criminal bonding
+        if (
+            self.criminal_status != CriminalStatus.NON_CRIMINAL
+            and other.criminal_status != CriminalStatus.NON_CRIMINAL
+        ):
+            weights["w0"] += 2.0  # major boost to base chance
 
         z = (
             weights["w0"]
@@ -179,6 +186,7 @@ class PersonAgent:
             + weights["w4"] * abs(self.age - other.age)
             + weights["w5"] * self.trait_distance(other)
         )
+
         return 1 / (1 + exp(-z)) >= threshold
 
     def add_associate(self, other):
@@ -188,6 +196,23 @@ class PersonAgent:
         return other.unique_id in self.associates
 
     # --- Crime Logic ---
+
+    def step_form_associations(self, all_agents):
+    # Only criminals form associations
+        if self.criminal_status == CriminalStatus.NON_CRIMINAL:
+            return
+
+        for other in all_agents:
+            if other.unique_id == self.unique_id:
+                continue
+
+            # Also skip if other is not a criminal
+            if other.criminal_status == CriminalStatus.NON_CRIMINAL:
+                continue
+
+            if not self.is_associated_with(other) and self.association_probability(other):
+                self.add_associate(other)
+                other.add_associate(self)
 
     def decide_which_crime(self):
         candidate_weights = {}
@@ -212,7 +237,7 @@ class PersonAgent:
         if not hasattr(self, "wealth"):
             return
 
-        p_caught = probability_of_being_caught(self.wealth, s_k, r_k)
+        p_caught = probability_of_being_caught(self.wealth, r_k)
         caught = np.random.random() < p_caught
 
         if caught:

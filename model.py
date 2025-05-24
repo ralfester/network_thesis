@@ -7,7 +7,7 @@ from data_export import agents_to_dataframe
 
 
 class CrimeSocietyModel(mesa.Model):
-    def __init__(self, num_agents=100, wage_mode="A", r_w=0.05):
+    def __init__(self, num_agents=100, wage_mode="B", r_w=0.05):
         self.num_agents = num_agents
         self.wage_mode = wage_mode
         self.r_w = r_w
@@ -65,6 +65,10 @@ class CrimeSocietyModel(mesa.Model):
         if self.current_step % 12 == 0:
             for agent in self.agent_list:
                 agent.age += 1
+
+        # --- Social bonding ---
+        for agent in agents:
+            agent.step_form_associations(agents)
 
         self.log_statistics()
 

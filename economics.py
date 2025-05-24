@@ -5,8 +5,8 @@ PARETO_ALPHA_WEALTH = 2.5
 PARETO_ALPHA_WAGE = 4.0
 WAGE_SCALING_FACTOR = 40
 WAGE_CAP = 2000
-WEALTH_MIN = 40
-WEALTH_MAX = 10000
+WEALTH_MIN = 400
+WEALTH_MAX = 15000
 MIN_WAGE = 20
 
 
@@ -59,18 +59,6 @@ def biased_wealth_transfer(agent_i, agent_j, beta=0.05, p_base=0.1, gamma=0.3):
     return f"{donor.unique_id} to {recipient.unique_id}: transferred {delta_w:.2f}"
 
 
-def crime_propensity(wealth, w_c=100, delta=0.05, zeta=2.0, epsilon=1e-2):
-    """
-    Calculate agent's probability of committing crime based on their wealth.
-
-    Parameters:
-        wealth (float): agent's current wealth
-        w_c (float): critical poverty threshold
-        delta (float): base scaling factor
-        zeta (float): economic stress exponent
-        epsilon (float): small constant to avoid division by zero
-
-    Returns:
-        float: probability of committing a crime
-    """
-    return delta * (w_c / (wealth + epsilon)) ** zeta
+def crime_propensity(wealth, w_c=2000, delta=0.01, zeta=0.15, epsilon=1e-2):
+    raw = delta * (w_c / (wealth + epsilon)) ** zeta
+    return max(0.005, raw)
