@@ -43,3 +43,6 @@ plots/weight_hist.pdf
 final_agents.csv
 plots/criminal_network.pdf
 plots/criminal_only_network.pdf
+crime_rates.pdf
+crimestats.csv
+Log-Normal_PDF_CDF_plotter.py
