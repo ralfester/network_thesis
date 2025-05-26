@@ -1,12 +1,12 @@
 import numpy as np
 
 # PARAMETERS
-PARETO_ALPHA_WEALTH = 2.5
-PARETO_ALPHA_WAGE = 4.0
+PARETO_ALPHA_WEALTH = 1.5
+PARETO_ALPHA_WAGE = 1.2
 WAGE_SCALING_FACTOR = 40
-WAGE_CAP = 2000
-WEALTH_MIN = 400
-WEALTH_MAX = 15000
+WAGE_CAP = 4000000
+WEALTH_MIN = 100
+WEALTH_MAX = 1e12
 MIN_WAGE = 20
 
 
@@ -37,28 +37,26 @@ def generate_wages_option_b(initial_wealth, r_w=0.05):
     return np.maximum(wages, MIN_WAGE)  # apply minimum wage floor
 
 
-def biased_wealth_transfer(agent_i, agent_j, beta=0.05, p_base=0.1, gamma=0.3):
+def biased_wealth_transfer(agent_i, agent_j, beta=0.7, p_base=0.1, gamma=1.0):
     if agent_i.wealth == 0 and agent_j.wealth == 0:
         return "No transfer: agents have zero wealth"
 
     w_i, w_j = agent_i.wealth, agent_j.wealth
     richer, poorer = (agent_i, agent_j) if w_i > w_j else (agent_j, agent_i)
 
-    p = p_base * (1 + gamma * (poorer.wealth / richer.wealth))
+    # Stronger rich-to-poor bias
+    p = p_base * (1 + gamma * (poorer.wealth / (richer.wealth + 1)))
     p = min(p, 1.0)
 
-    if np.random.random() < p:
-        donor, recipient = poorer, richer
-    else:
-        donor, recipient = richer, poorer
+    donor, recipient = (poorer, richer) if np.random.random() < p else (richer, poorer)
 
-    delta_w = min(beta * donor.wealth, recipient.wealth)
+    delta_w = beta * donor.wealth
     donor.wealth -= delta_w
     recipient.wealth += delta_w
 
     return f"{donor.unique_id} to {recipient.unique_id}: transferred {delta_w:.2f}"
 
 
-def crime_propensity(wealth, w_c=2000, delta=0.01, zeta=0.15, epsilon=1e-2):
+def crime_propensity(wealth, w_c=1000, delta=0.003, zeta=0.12, epsilon=1e-2):
     raw = delta * (w_c / (wealth + epsilon)) ** zeta
-    return max(0.005, raw)
+    return raw if raw <= 0.01 else 0.0  # no crime if above 1%

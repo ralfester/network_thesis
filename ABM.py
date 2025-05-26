@@ -234,7 +234,7 @@ class PersonAgent:
         return normalize_and_sample(eligible_crimes) if eligible_crimes else None
 
     def attempt_crime(self, s_k, r_k, crime_name="unknown", victim=None):
-        if not hasattr(self, "wealth"):
+        if not hasattr(self, "wealth") or self.incarcerated or self.desisted:
             return
 
         p_caught = probability_of_being_caught(self.wealth, r_k)
@@ -265,6 +265,10 @@ class PersonAgent:
                 gain = racketeering_gain(num_victims)
 
             self.wealth += gain
+
+            if not hasattr(self, "crimes_committed"):
+                self.crimes_committed = 0
+            self.crimes_committed += 1
 
         update_status(self, s_k, w_k=1.3 if crime_name == "assault" else 1.0)
 

@@ -4,6 +4,9 @@ import networkx as nx
 import matplotlib.pyplot as plt
 import seaborn as sns
 
+import pandas as pd
+import numpy as np
+
 from enums import CriminalStatus
 # --- Create plots directory ---
 PLOT_DIR = "plots"
@@ -164,3 +167,78 @@ def plot_criminal_only_network(agent_list, label="Criminal Network Only"):
     ax.axis("off")
 
     save_plot(fig, "criminal_only_network")
+
+
+def plot_crime_histogram(crime_counts, label="Crimes per Year", bin_size=12):
+    bins = list(range(0, len(crime_counts) + bin_size, bin_size))
+    yearly_crimes = [sum(crime_counts[i:i+bin_size]) for i in range(0, len(crime_counts), bin_size)]
+
+    fig, ax = plt.subplots(figsize=(10, 6))
+    ax.bar(range(len(yearly_crimes)), yearly_crimes)
+    ax.set_xticks(range(len(yearly_crimes)))
+    ax.set_xticklabels([f"Year {i+1}" for i in range(len(yearly_crimes))])
+    ax.set_title(label)
+    ax.set_ylabel("Total Crimes")
+    ax.set_xlabel("Year")
+    save_plot(fig, "crimes_per_year")
+
+
+def plot_wealth_comparison(initial_df, final_df):
+    fig, ax = plt.subplots(figsize=(10, 6))
+    sns.kdeplot(initial_df["wealth"], label="Initial", ax=ax)
+    sns.kdeplot(final_df["wealth"], label="Final", ax=ax)
+    ax.set_title("Wealth Distribution: Start vs End")
+    ax.set_xlabel("Wealth")
+    ax.legend()
+    save_plot(fig, "wealth_comparison")
+
+def plot_tracked_agent_life(life_data, agent_id, label=None):
+    df = pd.DataFrame(life_data)
+
+    fig, axs = plt.subplots(2, 1, figsize=(10, 8), sharex=True)
+
+    axs[0].plot(df["step"], df["wealth"])
+    axs[0].set_ylabel("Wealth")
+    axs[0].set_title(label or f"Agent {agent_id} — Wealth Over Time")
+
+    axs[1].bar(df["step"], df["crimes"])
+    axs[1].set_ylabel("Crimes")
+    axs[1].set_title("Crimes Per Step")
+    axs[1].set_xlabel("Timestep")
+
+    save_plot(fig, f"tracked_agent_{agent_id}_life")
+
+
+def gini_coefficient(values):
+    """
+    Compute Gini coefficient of a numpy array of values.
+    """
+    array = np.array(values)
+    if np.amin(array) < 0:
+        array -= np.amin(array)
+    array += 1e-8  # avoid division by zero
+    array = np.sort(array)
+    n = len(array)
+    index = np.arange(1, n + 1)
+    return (np.sum((2 * index - n - 1) * array)) / (n * np.sum(array))
+
+
+def report_gini(initial_df, final_df):
+    gini_start = gini_coefficient(initial_df["wealth"])
+    gini_end = gini_coefficient(final_df["wealth"])
+
+    print(f"Initial Gini Coefficient: {gini_start:.4f}")
+    print(f"Final Gini Coefficient:   {gini_end:.4f}")
+
+
+def plot_incarcerations(incarceration_log, bin_size=12, label="Incarcerations per Year"):
+    yearly = [sum(incarceration_log[i:i+bin_size]) for i in range(0, len(incarceration_log), bin_size)]
+
+    fig, ax = plt.subplots(figsize=(10, 6))
+    ax.bar(range(len(yearly)), yearly, color="steelblue")
+    ax.set_xticks(range(len(yearly)))
+    ax.set_xticklabels([f"Year {i+1}" for i in range(len(yearly))])
+    ax.set_ylabel("People Incarcerated")
+    ax.set_xlabel("Year")
+    ax.set_title(label)
+    save_plot(fig, "incarcerations_per_year")

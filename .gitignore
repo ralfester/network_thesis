@@ -60,3 +60,7 @@ __pycache__/model.cpython-313.pyc
 __pycache__/racketeering.cpython-313.pyc
 __pycache__/victim_selection.cpython-313.pyc
 __pycache__/visuals.cpython-313.pyc
+plots/crimes_per_year.pdf
+plots/incarcerations_per_year.pdf
+plots/tracked_agent_411_life.pdf
+plots/wealth_comparison.pdf

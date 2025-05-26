@@ -38,9 +38,13 @@ def probability_of_being_caught(wealth, report_rate):
 
 
 def incarcerate(agent, sentence_length):
-    """Sets incarceration state for a caught agent"""
+    # Sets incarceration state for a caught agent
+    if agent.incarcerated:
+        return
+
     agent.incarcerated = True
     agent.sentence_timer = sentence_length
+    agent.newly_incarcerated = True
 
 
 def step_incarceration(agent):
@@ -49,7 +53,7 @@ def step_incarceration(agent):
         agent.sentence_timer = max(0, agent.sentence_timer - 1)
         if agent.sentence_timer == 0:
             agent.incarcerated = False
-            if np.random.random() < 0.1:  # desistance
+            if np.random.random() < 0.7:  # desistance
                 agent.desisted = True
                 if agent.criminal_status in {
                     CriminalStatus.ORGANIZED_CRIMINAL,

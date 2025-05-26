@@ -16,6 +16,13 @@ class CrimeSocietyModel(mesa.Model):
 
         self.agent_list = []  # 🔧 Replaces mesa.time.RandomActivation
 
+        self.crime_counts = []
+
+        self.tracked_id = random.choice(range(self.num_agents))
+        self.tracked_life = []
+
+        self.incarceration_log = []
+
         # Setup economy
         initial_wealths, wages = setup_economy(num_agents, mode=wage_mode, r_w=r_w)
 
@@ -32,8 +39,10 @@ class CrimeSocietyModel(mesa.Model):
             self.agent_list.append(agent)
 
         # Initial data snapshot
-        self.agent_dataframe = agents_to_dataframe(self.agent_list)
-        self.snapshots.append(self.agent_dataframe.assign(step=self.current_step))
+        df = agents_to_dataframe(self.agent_list).round(2)
+        self.agent_dataframe = df
+        df.assign(step=self.current_step).to_csv("initial_agents.csv", index=False)
+        self.snapshots.append(df.assign(step=self.current_step))
 
     def step(self):
         self.current_step += 1
@@ -69,6 +78,33 @@ class CrimeSocietyModel(mesa.Model):
         # --- Social bonding ---
         for agent in agents:
             agent.step_form_associations(agents)
+
+        step_crimes = sum(getattr(agent, "crimes_committed", 0) for agent in agents)
+        self.crime_counts.append(step_crimes)
+
+        # Reset counters for next step
+        for agent in agents:
+            agent.crimes_committed = 0
+
+        # track life of one agent
+        tracked_agent = next(a for a in self.agent_list if a.unique_id == self.tracked_id)
+        self.tracked_life.append({
+            "step": self.current_step,
+            "wealth": tracked_agent.wealth,
+            "muscle_mass": tracked_agent.muscle_mass,
+            "crimes": getattr(tracked_agent, "crimes_committed", 0)
+        })
+
+
+        new_incarcerations = sum(
+            1 for a in self.agent_list if getattr(a, "newly_incarcerated", False)
+        )
+
+        # Reset marker for next step
+        for a in self.agent_list:
+            a.newly_incarcerated = False
+
+        self.incarceration_log.append(new_incarcerations)
 
         self.log_statistics()
 
