@@ -42,3 +42,4 @@ plots/wealth_hist.pdf
 plots/weight_hist.pdf
 final_agents.csv
 plots/criminal_network.pdf
+plots/criminal_only_network.pdf

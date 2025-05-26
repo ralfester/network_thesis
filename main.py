@@ -20,7 +20,7 @@ def main():
 
     # Plot criminal network
     visuals.plot_criminal_network(model.agent_list, label="Criminal Network After Simulation")
-
+    visuals.plot_criminal_only_network(model.agent_list, label="Criminal Association Network")
 
 if __name__ == "__main__":
     main()

@@ -4,6 +4,7 @@ import networkx as nx
 import matplotlib.pyplot as plt
 import seaborn as sns
 
+from enums import CriminalStatus
 # --- Create plots directory ---
 PLOT_DIR = "plots"
 os.makedirs(PLOT_DIR, exist_ok=True)
@@ -98,3 +99,68 @@ def plot_criminal_network(agent_list, label="Criminal Network"):
 
 
 print("visuals.py loaded. Use `generate_all_plots(df)` to create plots.")
+
+
+def plot_full_network(agent_list, label="Full Social Network"):
+    G = nx.Graph()
+
+    for agent in agent_list:
+        G.add_node(agent.unique_id, status=agent.criminal_status.name)
+        for associate_id in agent.associates:
+            G.add_edge(agent.unique_id, associate_id)
+
+    pos = nx.spring_layout(G, seed=42)
+
+    status_colors = {
+        "NON_CRIMINAL": "lightgray",
+        "PETTY_CRIMINAL": "orange",
+        "ORGANIZED_CRIMINAL": "red",
+        "VORY": "purple",
+    }
+    node_colors = [status_colors[G.nodes[n]["status"]] for n in G.nodes]
+    node_sizes = [50 + 10 * G.degree[n] for n in G.nodes]
+
+    fig, ax = plt.subplots(figsize=(12, 9))
+    nx.draw_networkx_nodes(
+        G, pos, node_color=node_colors, node_size=node_sizes, alpha=0.8
+    )
+    nx.draw_networkx_edges(G, pos, alpha=0.3)
+    ax.set_title(label)
+    ax.axis("off")
+
+    save_plot(fig, "full_network")
+
+
+def plot_criminal_only_network(agent_list, label="Criminal Network Only"):
+    G = nx.Graph()
+
+    criminals = [
+        a for a in agent_list if a.criminal_status != CriminalStatus.NON_CRIMINAL
+    ]
+
+    for agent in criminals:
+        G.add_node(agent.unique_id, status=agent.criminal_status.name)
+        for aid in agent.associates:
+            associate = next((a for a in criminals if a.unique_id == aid), None)
+            if associate:
+                G.add_edge(agent.unique_id, aid)
+
+    pos = nx.spring_layout(G, seed=24)
+
+    status_colors = {
+        "PETTY_CRIMINAL": "orange",
+        "ORGANIZED_CRIMINAL": "red",
+        "VORY": "purple",
+    }
+    node_colors = [status_colors[G.nodes[n]["status"]] for n in G.nodes]
+    node_sizes = [60 + 12 * G.degree[n] for n in G.nodes]
+
+    fig, ax = plt.subplots(figsize=(12, 9))
+    nx.draw_networkx_nodes(
+        G, pos, node_color=node_colors, node_size=node_sizes, alpha=0.9
+    )
+    nx.draw_networkx_edges(G, pos, alpha=0.4)
+    ax.set_title(label)
+    ax.axis("off")
+
+    save_plot(fig, "criminal_only_network")
