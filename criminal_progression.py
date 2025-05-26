@@ -17,15 +17,20 @@ def update_status(agent, s_k, w_k):
     score = agent.criminal_score
     degree = len(agent.associates)
     has_connected_criminal = any(
-        getattr(agent.model.schedule.agents[aid], "criminal_score", 0) >= 30
+        next(
+            (a for a in agent.model.agent_list if a.unique_id == aid), None
+        ).criminal_score
+        >= 30
         for aid in agent.associates
+        if next((a for a in agent.model.agent_list if a.unique_id == aid), None)
+        is not None
     )
 
     # Updates criminal status
     if score >= 300 and degree >= 6:
         # Need a check for centrality (placeholder: use degree for now)
         centrality = degree
-        max_centrality = max(len(a.associates) for a in agent.model.schedule.agents)
+        max_centrality = max(len(a.associates) for a in agent.model.agent_list)
         if centrality == max_centrality:
             agent.criminal_status = CriminalStatus.VORY
     elif score >= 60 and degree >= 2 and has_connected_criminal:

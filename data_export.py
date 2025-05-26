@@ -2,26 +2,23 @@ import pandas as pd
 
 
 def agents_to_dataframe(agent_list):
-    """
-    Convert a list of PersonAgent objects into a pandas DataFrame.
-
-    Parameters:
-        agent_list (list): List of PersonAgent instances.
-
-    Returns:
-        pd.DataFrame: DataFrame with agent attributes.
-    """
     data = []
     for agent in agent_list:
-        data.append({
-            "id": agent.unique_id,
-            "height": agent.height,
-            "weight": agent.weight,
+        row = {
+            "unique_id": agent.unique_id,
+            "gender": getattr(agent, "gender", None),
+            "age": getattr(agent, "age", None),
+            "height": getattr(agent, "height", None),
+            "weight": getattr(agent, "weight", None),
+            "muscle_mass": getattr(agent, "muscle_mass", None),
             "wealth": getattr(agent, "wealth", None),
             "wage": getattr(agent, "wage", None),
             "nationality": getattr(agent, "nationality", None),
-            "lang_primary": getattr(agent, "language_primary", None),
-            "lang_secondary": getattr(agent, "language_secondary", None),
-        })
-
+            "language_primary": getattr(agent, "language_primary", None),
+            "language_secondary": getattr(agent, "language_secondary", None),
+            "criminal_status": getattr(agent.criminal_status, "name", None),
+            "incarcerated": getattr(agent, "incarcerated", False),
+            "desisted": getattr(agent, "desisted", False),
+        }
+        data.append(row)
     return pd.DataFrame(data)

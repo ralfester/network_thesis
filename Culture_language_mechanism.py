@@ -2,7 +2,7 @@ import numpy as np
 
 # Placeholder for post-Soviet states with placeholder probabilities
 NATIONALITIES = {
-    "Russia": 0.51,
+    "Russia": 0.52,
     "Ukraine": 0.15,
     "Belarus": 0.05,
     "Uzbekistan": 0.06,
@@ -24,9 +24,9 @@ LANGUAGE_PROFILES = {
     "Ukraine": ("Ukrainian", "Russian"),
     "Belarus": ("Belarusian", "Russian"),
     "Kazakhstan": ("Kazakh", "Russian"),
-    "Uzbekistan": ("Uzbek", None),
+    "Uzbekistan": ("Uzbek", "Russian"),
     "Latvia": ("Latvian", "Russian"),
-    "Lithuania": ("Lithuanian", None),
+    "Lithuania": ("Lithuanian", "Russian"),
     # Will extend later
 }
 
