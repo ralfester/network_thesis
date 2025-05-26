@@ -46,3 +46,17 @@ plots/criminal_only_network.pdf
 crime_rates.pdf
 crimestats.csv
 Log-Normal_PDF_CDF_plotter.py
+__pycache__/ABM.cpython-313.pyc
+__pycache__/crime_decision.cpython-313.pyc
+__pycache__/crime_rewards.cpython-313.pyc
+__pycache__/crimes.cpython-313.pyc
+__pycache__/criminal_progression.cpython-313.pyc
+__pycache__/Culture_language_mechanism.cpython-313.pyc
+__pycache__/data_export.cpython-313.pyc
+__pycache__/economics.cpython-313.pyc
+__pycache__/enums.cpython-313.pyc
+__pycache__/law_enforcement.cpython-313.pyc
+__pycache__/model.cpython-313.pyc
+__pycache__/racketeering.cpython-313.pyc
+__pycache__/victim_selection.cpython-313.pyc
+__pycache__/visuals.cpython-313.pyc
