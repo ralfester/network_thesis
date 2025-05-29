@@ -14,7 +14,7 @@ class CrimeSocietyModel(mesa.Model):
         self.current_step = 0
         self.snapshots = []
 
-        self.agent_list = []  # 🔧 Replaces mesa.time.RandomActivation
+        self.agent_list = [] # avoids old mesa logic 😁
 
         self.crime_counts = []
 
@@ -48,14 +48,14 @@ class CrimeSocietyModel(mesa.Model):
         self.current_step += 1
 
         agents = self.agent_list.copy()
-        random.shuffle(agents)  # 🔁 Custom randomized activation
+        random.shuffle(agents)  # Custom randomized activation 📀
 
         # Wage income
         for agent in agents:
             if not agent.incarcerated:
                 agent.wealth += agent.wage
 
-        # Wealth exchange
+        # Wealth exchange 🔱
         for _ in range(self.num_agents // 2):
             a, b = random.sample(agents, 2)
             biased_wealth_transfer(a, b)
