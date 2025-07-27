@@ -1,6 +1,5 @@
 import mesa
 
-#  import pandas as pd
 from ABM import PersonAgent, setup_economy
 from law_enforcement import step_incarceration
 from economics import biased_wealth_transfer
