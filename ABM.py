@@ -1,7 +1,6 @@
 import mesa
 import numpy as np
 import random
-import math
 from enum import Enum, auto
 from math import exp, sqrt
 
