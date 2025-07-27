@@ -5,7 +5,6 @@ from matplotlib.backends.backend_pdf import PdfPages
 df = pd.read_csv("download_matrix2.csv")
 df = df.fillna(0)
 df = df.map(lambda x: f"{x:.3g}" if isinstance(x, (int, float)) else x)
-#  print(df.head())
 
 df.columns = df.columns.str.replace(r'\d{4}-\d{4}', '', regex=True)
 
