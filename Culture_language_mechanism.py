@@ -27,7 +27,7 @@ LANGUAGE_PROFILES = {
     "Uzbekistan": ("Uzbek", None),
     "Latvia": ("Latvian", "Russian"),
     "Lithuania": ("Lithuanian", None),
-    # Extend this to other countries
+    # DO: Extend this to other countries
 }
 
 # Cultural distance (symmetric matrix: placeholder values between 0 and 1 for now)
